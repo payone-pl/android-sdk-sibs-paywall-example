@@ -1,0 +1,17 @@
+<resources>
+    <style name="Theme.SibbsSDKExampleApp" parent="Theme.AppCompat.Light"/>
+
+    <style name="Theme.TransactionActivity" parent="Theme.AppCompat.Light">
+        <item name="actionBarTheme">@style/ToolbarStyle</item>
+    </style>
+
+    <style name="ToolbarStyle" parent="Theme.AppCompat.Light">
+        <!--SDK toolbar background color-->
+        <item name="colorPrimary">?attr/colorAccent</item>
+        <!--SDK toolbar title color-->
+        <item name="android:textColorPrimary">@android:color/white</item>
+        <!--SDK toolbar icon color-->
+        <item name="colorControlNormal">@android:color/white</item>
+    </style>
+
+</resources>

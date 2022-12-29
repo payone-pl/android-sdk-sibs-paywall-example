@@ -1,0 +1,21 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+//        mavenLocal() //todo
+        maven {
+            url "https://jitpack.io"
+            credentials { username 'jp_15emv3pvm47b6olv03djoubapm' }
+        }
+    }
+}
+rootProject.name = "android-sdk-sibs-paywall-example"
+include ':app'

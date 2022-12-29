@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.SibbsSDKExampleApp"
+        tools:targetApi="31">
+
+        <activity
+            android:name=".SdkConsumerActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustPan|adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+<!--        <activity-->
+<!--            android:name="com.sibs.sdk.TransactionActivity"-->
+<!--            android:theme="@style/Theme.TransactionActivity"-->
+<!--            android:label="SDK">-->
+
+<!--            <meta-data-->
+<!--                android:name="sibs_access_token"-->
+<!--                android:value="eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJjODQxM2VmNC1iMDc1LTRhMGMtOWM5OS1lMDZlMDEzNDAxMmEifQ.eyJpYXQiOjE2NzA5NDQyMzYsImp0aSI6IjAxZDNhNDRjLTk0ZDgtNGY4Yi1hMmE0LWY4NzlmNDc1YjI4ZSIsImlzcyI6Imh0dHBzOi8vY2VyLnNpdGUxLnNzby5zeXMuc2licy5wdC9hdXRoL3JlYWxtcy9DRVIuU1BHLUlOVC5BUEkiLCJhdWQiOiJodHRwczovL2Nlci5zaXRlMS5zc28uc3lzLnNpYnMucHQvYXV0aC9yZWFsbXMvQ0VSLlNQRy1JTlQuQVBJIiwic3ViIjoiNTg5MTdlMWUtOTMxOC00ZmVhLWIzZjYtOTcwZDkyNTMxZGM4IiwidHlwIjoiT2ZmbGluZSIsImF6cCI6IkNFUi5TUEctSU5ULkFQSS1DTEkiLCJzZXNzaW9uX3N0YXRlIjoiZTNkYmNmMTYtNDdjOS00NTllLTk4ZTgtMTQ5MmQ5YTZiMGIyIiwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBvZmZsaW5lX2FjY2VzcyBlbWFpbCJ9.farJCsVCx5wM-HMOuU7rAlthBa1Kg0BN01SGNdcB424.eyJtYyI6IjIxMiIsInRjIjoiMTgyIn0=.D7AF6CA6B2774F82E6F63EA52001291F621CA5902D2444C8EFC538F2DFDCF828" />-->
+<!--            <meta-data-->
+<!--                android:name="sibs_client_id"-->
+<!--                android:value="502dfe94-5d7a-40e4-a707-e50cedda6c4b" />-->
+<!--            <meta-data-->
+<!--                android:name="sibs_api_url"-->
+<!--                android:value="https://stargate-cer.qly.site1.sibs.pt" />-->
+<!--            <meta-data-->
+<!--                android:name="sibs_web_url"-->
+<!--                android:value="https://stargate-cer.qly.site1.sibs.pt" />-->
+<!--        </activity>-->
+
+        <activity
+            android:name="com.sibs.sdk.TransactionActivity"
+            android:theme="@style/Theme.TransactionActivity"
+            android:label="SDK">
+
+            <meta-data
+                android:name="sibs_access_token"
+                android:value="my_sibs_access_token" />
+            <meta-data
+                android:name="sibs_client_id"
+                android:value="my_sibs_client_id" />
+            <meta-data
+                android:name="sibs_api_url"
+                android:value="my_sibs_api_url" />
+            <meta-data
+                android:name="sibs_web_url"
+                android:value="my_sibs_web_url" />
+        </activity>
+
+
+    </application>
+
+</manifest>
