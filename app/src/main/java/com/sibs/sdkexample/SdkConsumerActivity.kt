@@ -24,7 +24,7 @@ class SdkConsumerActivity : AppCompatActivity(), PresentationFragment.Callbacks 
         val transactionParams =
             createTransactionParams(stringParams, paymentMethodsParams) ?: return
         /** 2. Start SIBS SDK **/
-        sdkActivityLauncher.launch(TransactionActivity.Companion.getIntent(this, transactionParams))
+        sdkActivityLauncher.launch(TransactionActivity.getIntent(this, transactionParams))
     }
 
     /** 3. Consume the result **/

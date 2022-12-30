@@ -25,25 +25,6 @@
             </intent-filter>
         </activity>
 
-<!--        <activity-->
-<!--            android:name="com.sibs.sdk.TransactionActivity"-->
-<!--            android:theme="@style/Theme.TransactionActivity"-->
-<!--            android:label="SDK">-->
-
-<!--            <meta-data-->
-<!--                android:name="sibs_access_token"-->
-<!--                android:value="eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJjODQxM2VmNC1iMDc1LTRhMGMtOWM5OS1lMDZlMDEzNDAxMmEifQ.eyJpYXQiOjE2NzA5NDQyMzYsImp0aSI6IjAxZDNhNDRjLTk0ZDgtNGY4Yi1hMmE0LWY4NzlmNDc1YjI4ZSIsImlzcyI6Imh0dHBzOi8vY2VyLnNpdGUxLnNzby5zeXMuc2licy5wdC9hdXRoL3JlYWxtcy9DRVIuU1BHLUlOVC5BUEkiLCJhdWQiOiJodHRwczovL2Nlci5zaXRlMS5zc28uc3lzLnNpYnMucHQvYXV0aC9yZWFsbXMvQ0VSLlNQRy1JTlQuQVBJIiwic3ViIjoiNTg5MTdlMWUtOTMxOC00ZmVhLWIzZjYtOTcwZDkyNTMxZGM4IiwidHlwIjoiT2ZmbGluZSIsImF6cCI6IkNFUi5TUEctSU5ULkFQSS1DTEkiLCJzZXNzaW9uX3N0YXRlIjoiZTNkYmNmMTYtNDdjOS00NTllLTk4ZTgtMTQ5MmQ5YTZiMGIyIiwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBvZmZsaW5lX2FjY2VzcyBlbWFpbCJ9.farJCsVCx5wM-HMOuU7rAlthBa1Kg0BN01SGNdcB424.eyJtYyI6IjIxMiIsInRjIjoiMTgyIn0=.D7AF6CA6B2774F82E6F63EA52001291F621CA5902D2444C8EFC538F2DFDCF828" />-->
-<!--            <meta-data-->
-<!--                android:name="sibs_client_id"-->
-<!--                android:value="502dfe94-5d7a-40e4-a707-e50cedda6c4b" />-->
-<!--            <meta-data-->
-<!--                android:name="sibs_api_url"-->
-<!--                android:value="https://stargate-cer.qly.site1.sibs.pt" />-->
-<!--            <meta-data-->
-<!--                android:name="sibs_web_url"-->
-<!--                android:value="https://stargate-cer.qly.site1.sibs.pt" />-->
-<!--        </activity>-->
-
         <activity
             android:name="com.sibs.sdk.TransactionActivity"
             android:theme="@style/Theme.TransactionActivity"
@@ -51,18 +32,17 @@
 
             <meta-data
                 android:name="sibs_access_token"
-                android:value="my_sibs_access_token" />
+                android:value="eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJjODQxM2VmNC1iMDc1LTRhMGMtOWM5OS1lMDZlMDEzNDAxMmEifQ.eyJpYXQiOjE2NzA5NDQyMzYsImp0aSI6IjAxZDNhNDRjLTk0ZDgtNGY4Yi1hMmE0LWY4NzlmNDc1YjI4ZSIsImlzcyI6Imh0dHBzOi8vY2VyLnNpdGUxLnNzby5zeXMuc2licy5wdC9hdXRoL3JlYWxtcy9DRVIuU1BHLUlOVC5BUEkiLCJhdWQiOiJodHRwczovL2Nlci5zaXRlMS5zc28uc3lzLnNpYnMucHQvYXV0aC9yZWFsbXMvQ0VSLlNQRy1JTlQuQVBJIiwic3ViIjoiNTg5MTdlMWUtOTMxOC00ZmVhLWIzZjYtOTcwZDkyNTMxZGM4IiwidHlwIjoiT2ZmbGluZSIsImF6cCI6IkNFUi5TUEctSU5ULkFQSS1DTEkiLCJzZXNzaW9uX3N0YXRlIjoiZTNkYmNmMTYtNDdjOS00NTllLTk4ZTgtMTQ5MmQ5YTZiMGIyIiwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBvZmZsaW5lX2FjY2VzcyBlbWFpbCJ9.farJCsVCx5wM-HMOuU7rAlthBa1Kg0BN01SGNdcB424.eyJtYyI6IjIxMiIsInRjIjoiMTgyIn0=.D7AF6CA6B2774F82E6F63EA52001291F621CA5902D2444C8EFC538F2DFDCF828" />
             <meta-data
                 android:name="sibs_client_id"
-                android:value="my_sibs_client_id" />
+                android:value="502dfe94-5d7a-40e4-a707-e50cedda6c4b" />
             <meta-data
                 android:name="sibs_api_url"
-                android:value="my_sibs_api_url" />
+                android:value="https://stargate-cer.qly.site1.sibs.pt" />
             <meta-data
                 android:name="sibs_web_url"
-                android:value="my_sibs_web_url" />
+                android:value="https://stargate-cer.qly.site1.sibs.pt" />
         </activity>
-
 
     </application>
 
