@@ -31,27 +31,20 @@ class SdkConsumerActivity : AppCompatActivity(), PresentationFragment.Callbacks 
     private val sdkActivityLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { activityResult ->
+        val transferResult = activityResult.data
+            ?.let(TransactionActivity::parseResult)
+            ?: return@registerForActivityResult
+
         if (Activity.RESULT_OK == activityResult.resultCode) {
             showToast("Transaction finished")
-            val transferResult = activityResult.data
-                ?.let(TransactionActivity::parseResult)
-                ?: return@registerForActivityResult
-
             (supportFragmentManager.fragments.firstOrNull() as? PresentationFragment)
                 ?.submitResult(transferResult)
-
-            if (!transferResult.isSuccess) {
-                transferResult.transactionId?.let(::performOptionalTransactionStatusCheck)
-            }
-
         } else if (Activity.RESULT_CANCELED == activityResult.resultCode) {
             showToast("Transaction canceled")
-
-            /** TransactionId will be available only if the transaction got registered in Sibs **/
-            activityResult.data
-                ?.let(TransactionActivity::parseTransactionId)
-                ?.let(::performOptionalTransactionStatusCheck)
         }
+
+        /** TransactionId will be available only if the transaction got registered in Sibs **/
+        transferResult.transactionId?.let(::performOptionalTransactionStatusCheck)
     }
 
     /**
@@ -105,13 +98,13 @@ class SdkConsumerActivity : AppCompatActivity(), PresentationFragment.Callbacks 
         val transactionParamsBuilder = TransactionParams.Builder()
             //required parameters
             .terminalId(terminalId)
-            .merchantTransactionDescription(merchantTransactionDescription)
+            .transactionDescription(transactionDescription)
             .transactionId(transactionId)
             .amount(amount)
             .currency(currency)
             .paymentMethods(paymentMethods)
             //optional parameters
-            .transactionDescription(transactionDescription)
+            .merchantTransactionDescription(merchantTransactionDescription)
             .shopUrl(shopUrl)
             .client(client)
             .email(email)
