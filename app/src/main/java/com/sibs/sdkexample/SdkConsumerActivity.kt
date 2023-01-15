@@ -11,18 +11,30 @@ import kotlinx.coroutines.launch
 
 class SdkConsumerActivity : AppCompatActivity(), PresentationFragment.Callbacks {
 
+    private lateinit var tokensCache: MutableSet<Token>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_client)
+        tokensCache = savedInstanceState
+            ?.getSerializableArrayListCompat<Token>(TOKENS_CACHE_KEY)
+            .orEmpty()
+            .toMutableSet()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putSerializable(TOKENS_CACHE_KEY, arrayListOf<Token>().apply { addAll(tokensCache) } )
     }
 
     override fun startPayment(
         stringParams: Map<String, String>,
-        paymentMethodsParams: List<PaymentMethod>
+        paymentMethodsParams: List<PaymentMethod>,
+        useCardTokenization: Boolean
     ) {
         /** 1. Create Transaction Params **/
         val transactionParams =
-            createTransactionParams(stringParams, paymentMethodsParams) ?: return
+            createTransactionParams(stringParams, paymentMethodsParams, useCardTokenization) ?: return
         /** 2. Start SIBS SDK **/
         sdkActivityLauncher.launch(TransactionActivity.getIntent(this, transactionParams))
     }
@@ -37,8 +49,13 @@ class SdkConsumerActivity : AppCompatActivity(), PresentationFragment.Callbacks 
 
         if (Activity.RESULT_OK == activityResult.resultCode) {
             showToast("Transaction finished")
+
             (supportFragmentManager.fragments.firstOrNull() as? PresentationFragment)
                 ?.submitResult(transferResult)
+
+            /** Card Tokenization: Cache token  **/
+            transferResult.token?.let(tokensCache::add)
+
         } else if (Activity.RESULT_CANCELED == activityResult.resultCode) {
             showToast("Transaction canceled")
         }
@@ -59,7 +76,7 @@ class SdkConsumerActivity : AppCompatActivity(), PresentationFragment.Callbacks 
         val statusCheckService = SibsPaymentStatusService(this)
         lifecycleScope.launch {
             when (val response = statusCheckService.check(transactionId)) {
-                is PaymentStatusCheckResponse.Checked -> showToast("status: ${response.paymentStatus.paymentStatus}")
+                is PaymentStatusCheckResponse.Checked -> showToast("Current status: ${response.paymentStatus.paymentStatus}")
                 is PaymentStatusCheckResponse.Error -> showToast("${response::class.java.simpleName}:${response.httpErrorCode}")
                 PaymentStatusCheckResponse.SDKNotConfigured -> showToast(response::class.java.simpleName)
             }
@@ -68,7 +85,8 @@ class SdkConsumerActivity : AppCompatActivity(), PresentationFragment.Callbacks 
 
     private fun createTransactionParams(
         stringParams: Map<String, String>,
-        paymentMethods: List<PaymentMethod>
+        paymentMethods: List<PaymentMethod>,
+        useCardTokenization: Boolean,
     ): TransactionParams? {
         val terminalId = stringParams["terminalId"]?.toIntOrNull() ?: 0
         val merchantTransactionDescription =
@@ -103,6 +121,17 @@ class SdkConsumerActivity : AppCompatActivity(), PresentationFragment.Callbacks 
             .amount(amount)
             .currency(currency)
             .paymentMethods(paymentMethods)
+            //optional card tokenization
+            .apply {
+                if(useCardTokenization) {
+                    val cachedCardTokens = tokensCache.takeIf { it.isNotEmpty() }?.toList()
+                    val tokenizationParams = TokenizationParams.Builder()
+                        .tokenizeCard(true)
+                        .tokens(cachedCardTokens)
+                        .build()
+                    tokenization(tokenizationParams)
+                }
+            }
             //optional parameters
             .merchantTransactionDescription(merchantTransactionDescription)
             .shopUrl(shopUrl)
@@ -122,4 +151,8 @@ class SdkConsumerActivity : AppCompatActivity(), PresentationFragment.Callbacks 
     private fun showToast(msg: String) = Toast
         .makeText(this, msg, Toast.LENGTH_SHORT)
         .show()
+
+    companion object {
+        private const val TOKENS_CACHE_KEY = "tokens_cache"
+    }
 }

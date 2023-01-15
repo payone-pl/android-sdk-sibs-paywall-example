@@ -8,7 +8,6 @@ import android.text.TextWatcher
 import android.util.DisplayMetrics
 import android.widget.EditText
 import java.io.Serializable
-import kotlin.math.roundToInt
 
 fun EditText.afterTextChanged(afterTextChanged: (String) -> Unit) =
     addTextChangedListener(object : TextWatcher {
@@ -27,9 +26,13 @@ inline fun <reified T : Serializable> Bundle.getSerializableCompat(key: String):
     }
 }
 
-fun Int.pxAsDp(): Int {
+inline fun <reified T : Serializable> Bundle.getSerializableArrayListCompat(key: String): ArrayList<T>? {
+    return runCatching { getSerializable(key) as? ArrayList<T> }
+        .getOrNull()
+}
+
+fun Int.dpAsPx(): Int {
     val displayMetrics = Resources.getSystem().displayMetrics
-    return (this * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT))
-        .roundToInt()
+    return (this * (displayMetrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT))
 }
 
