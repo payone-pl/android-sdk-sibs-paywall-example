@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.appcompat.widget.SwitchCompat
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import com.sibs.sdk.PaymentMethod
@@ -32,13 +33,15 @@ class PresentationFragment : Fragment() {
     interface Callbacks {
         fun startPayment(
             stringParams: Map<String, String>,
-            paymentMethodsParams: List<PaymentMethod>
+            paymentMethodsParams: List<PaymentMethod>,
+            useCardTokenization: Boolean,
         )
     }
 
     private lateinit var linearLayout: LinearLayout
     private lateinit var inputTexts: MutableMap<String, String>
     private lateinit var inputPaymentMethods: MutableMap<PaymentMethod, Boolean>
+    private var useCardTokenization: Boolean = false
     private var result: TransferResult? = null
 
     //OS
@@ -50,6 +53,7 @@ class PresentationFragment : Fragment() {
         inputTexts = getTextInputs(savedInstanceState)
         inputPaymentMethods = getPaymentMethods(savedInstanceState)
         result = savedInstanceState?.getSerializableCompat(TRANSFER_RESULT_KEY)
+        useCardTokenization = savedInstanceState?.getBoolean(CARD_TOKENIZATION_KEY) ?: useCardTokenization
         return NestedScrollView(requireContext()).apply {
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -60,7 +64,7 @@ class PresentationFragment : Fragment() {
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT
                 )
-                setPadding(16.pxAsDp(), 0, 16.pxAsDp(), 16.pxAsDp())
+                setPadding(16.dpAsPx(), 0, 16.dpAsPx(), 16.dpAsPx())
                 orientation = LinearLayout.VERTICAL
             }
             addView(linearLayout)
@@ -73,6 +77,7 @@ class PresentationFragment : Fragment() {
         inputPaymentMethods
             .mapNotNull { (paymentMethod, isSelected) -> if (isSelected) paymentMethod.name else null }
             .let { outState.putStringArray(TRANSFER_PAYMENT_METHODS_KEY, it.toTypedArray()) }
+        outState.putBoolean(CARD_TOKENIZATION_KEY, useCardTokenization)
     }
 
     override fun onResume() {
@@ -105,10 +110,8 @@ class PresentationFragment : Fragment() {
         }
         addView(TextView(requireContext()).apply {
             text = "Payment methods"
-            layoutParams = ViewGroup.MarginLayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-            ).apply { setMargins(0, 16.pxAsDp(), 0, 0) }
+            layoutParams = createItemLayoutParams()
+                .apply { setMargins(0, 16.dpAsPx(), 0, 0) }
         })
         PaymentMethod.values().forEach { paymentMethod ->
             addView(
@@ -121,6 +124,11 @@ class PresentationFragment : Fragment() {
                 )
             )
         }
+        addView(createSpacingView())
+        addView(createToggle("Card tokenization", isChecked = useCardTokenization) { isChecked ->
+            useCardTokenization = isChecked
+        })
+        addView(createSpacingView())
         addView(createHeaderView("Optional params"))
         defaultOptionalParams.keys.sorted().forEach { hint ->
             inputTexts[hint]?.let { input ->
@@ -136,7 +144,8 @@ class PresentationFragment : Fragment() {
         addView(createButtonView("Start SDK") {
             (requireActivity() as? Callbacks)?.startPayment(
                 stringParams = inputTexts,
-                paymentMethodsParams = inputPaymentMethods.mapNotNull { if (it.value) it.key else null }
+                paymentMethodsParams = inputPaymentMethods.mapNotNull { if (it.value) it.key else null },
+                useCardTokenization = useCardTokenization
             )
         })
     }
@@ -170,7 +179,7 @@ class PresentationFragment : Fragment() {
             layoutParams = ViewGroup.MarginLayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
-            ).apply { setMargins(0, 16.pxAsDp(), 0, 0) }
+            ).apply { setMargins(0, 16.dpAsPx(), 0, 0) }
             text = header.uppercase()
             gravity = Gravity.END
             setTypeface(null, Typeface.BOLD)
@@ -194,6 +203,11 @@ class PresentationFragment : Fragment() {
         }
     }
 
+    private fun createSpacingView(): View = TextView(requireContext()).apply {
+        text = " "
+        layoutParams = createItemLayoutParams()
+    }
+
     private fun createButtonView(text: String, clickListener: View.OnClickListener): View {
         return Button(requireContext()).apply {
             setOnClickListener(clickListener)
@@ -213,6 +227,22 @@ class PresentationFragment : Fragment() {
             text = paymentMethod.name
             this.isChecked = isChecked
             setOnCheckedChangeListener { _, isChecked -> onCheckedChange(isChecked) }
+        }
+    }
+
+    private fun createToggle(
+        text: String,
+        isChecked: Boolean,
+        onCheckedChange: (Boolean) -> Unit
+    ): SwitchCompat {
+        return SwitchCompat(requireContext()).apply {
+            layoutParams = ViewGroup.MarginLayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                48.dpAsPx(),
+            )
+            this.text = text
+            setChecked(isChecked)
+            setOnCheckedChangeListener { _, isChecked -> onCheckedChange(isChecked)}
         }
     }
 
@@ -248,6 +278,7 @@ class PresentationFragment : Fragment() {
     }
 
     companion object {
+        private const val CARD_TOKENIZATION_KEY = "card_tokenization"
         const val TRANSFER_RESULT_KEY = "result"
         const val TRANSFER_PAYMENT_METHODS_KEY = "payment_methods"
     }

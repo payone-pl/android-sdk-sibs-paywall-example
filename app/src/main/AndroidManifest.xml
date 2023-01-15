@@ -18,7 +18,8 @@
         <activity
             android:name=".SdkConsumerActivity"
             android:exported="true"
-            android:windowSoftInputMode="adjustPan|adjustResize">
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -28,6 +29,8 @@
         <activity
             android:name="com.sibs.sdk.TransactionActivity"
             android:theme="@style/Theme.TransactionActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize"
             android:label="SDK">
 
             <meta-data
