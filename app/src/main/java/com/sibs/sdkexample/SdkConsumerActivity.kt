@@ -119,8 +119,8 @@ class SdkConsumerActivity : AppCompatActivity(), PresentationFragment.Callbacks 
             .amount(amount)
             .currency(currency)
             .paymentMethods(paymentMethods)
-            //optional card tokenization
             .apply {
+                //optional card tokenization
                 val tokenizationParams = TokenizationParams.Builder()
                     .tokenizeCard(useCardTokenization)
                     .tokens(tokens)
