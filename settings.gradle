@@ -10,7 +10,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        mavenLocal()
+//        mavenLocal()
         maven {
             url "https://jitpack.io"
             credentials { username 'jp_15emv3pvm47b6olv03djoubapm' }

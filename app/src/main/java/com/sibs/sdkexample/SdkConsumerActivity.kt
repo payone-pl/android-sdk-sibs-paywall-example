@@ -11,30 +11,25 @@ import kotlinx.coroutines.launch
 
 class SdkConsumerActivity : AppCompatActivity(), PresentationFragment.Callbacks {
 
-    private lateinit var tokensCache: MutableSet<Token>
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_client)
-        tokensCache = savedInstanceState
-            ?.getSerializableArrayListCompat<Token>(TOKENS_CACHE_KEY)
-            .orEmpty()
-            .toMutableSet()
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putSerializable(TOKENS_CACHE_KEY, arrayListOf<Token>().apply { addAll(tokensCache) } )
     }
 
     override fun startPayment(
         stringParams: Map<String, String>,
         paymentMethodsParams: List<PaymentMethod>,
-        useCardTokenization: Boolean
+        useCardTokenization: Boolean,
+        tokens: List<Token>,
     ) {
         /** 1. Create Transaction Params **/
-        val transactionParams =
-            createTransactionParams(stringParams, paymentMethodsParams, useCardTokenization) ?: return
+        val transactionParams = createTransactionParams(
+            stringParams,
+            paymentMethodsParams,
+            useCardTokenization,
+            tokens
+        ) ?: return
+
         /** 2. Start SIBS SDK **/
         sdkActivityLauncher.launch(TransactionActivity.getIntent(this, transactionParams))
     }
@@ -50,11 +45,13 @@ class SdkConsumerActivity : AppCompatActivity(), PresentationFragment.Callbacks 
         if (Activity.RESULT_OK == activityResult.resultCode) {
             showToast("Transaction finished")
 
-            (supportFragmentManager.fragments.firstOrNull() as? PresentationFragment)
-                ?.submitResult(transferResult)
+            val presentationFragment =
+                (supportFragmentManager.fragments.firstOrNull() as? PresentationFragment)
+
+            presentationFragment?.submitResult(transferResult)
 
             /** Card Tokenization: Cache token  **/
-            transferResult.token?.let(tokensCache::add)
+            transferResult.token?.let { presentationFragment?.cacheToken(it) }
 
         } else if (Activity.RESULT_CANCELED == activityResult.resultCode) {
             showToast("Transaction canceled")
@@ -87,6 +84,7 @@ class SdkConsumerActivity : AppCompatActivity(), PresentationFragment.Callbacks 
         stringParams: Map<String, String>,
         paymentMethods: List<PaymentMethod>,
         useCardTokenization: Boolean,
+        tokens: List<Token>
     ): TransactionParams? {
         val terminalId = stringParams["terminalId"]?.toIntOrNull() ?: 0
         val merchantTransactionDescription =
@@ -121,16 +119,13 @@ class SdkConsumerActivity : AppCompatActivity(), PresentationFragment.Callbacks 
             .amount(amount)
             .currency(currency)
             .paymentMethods(paymentMethods)
-            //optional card tokenization
             .apply {
-                if(useCardTokenization) {
-                    val cachedCardTokens = tokensCache.takeIf { it.isNotEmpty() }?.toList()
-                    val tokenizationParams = TokenizationParams.Builder()
-                        .tokenizeCard(true)
-                        .tokens(cachedCardTokens)
-                        .build()
-                    tokenization(tokenizationParams)
-                }
+                //optional card tokenization
+                val tokenizationParams = TokenizationParams.Builder()
+                    .tokenizeCard(useCardTokenization)
+                    .tokens(tokens)
+                    .build()
+                tokenization(tokenizationParams)
             }
             //optional parameters
             .merchantTransactionDescription(merchantTransactionDescription)
@@ -152,7 +147,4 @@ class SdkConsumerActivity : AppCompatActivity(), PresentationFragment.Callbacks 
         .makeText(this, msg, Toast.LENGTH_SHORT)
         .show()
 
-    companion object {
-        private const val TOKENS_CACHE_KEY = "tokens_cache"
-    }
 }

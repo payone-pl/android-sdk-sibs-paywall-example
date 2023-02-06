@@ -12,6 +12,7 @@ import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import com.sibs.sdk.PaymentMethod
 import com.sibs.sdk.SibsSdkError
+import com.sibs.sdk.Token
 import com.sibs.sdk.TransferResult
 
 private val defaultRequiredParams = mapOf(
@@ -35,14 +36,22 @@ class PresentationFragment : Fragment() {
             stringParams: Map<String, String>,
             paymentMethodsParams: List<PaymentMethod>,
             useCardTokenization: Boolean,
+            tokens: List<Token>,
         )
     }
 
     private lateinit var linearLayout: LinearLayout
     private lateinit var inputTexts: MutableMap<String, String>
     private lateinit var inputPaymentMethods: MutableMap<PaymentMethod, Boolean>
+    private lateinit var tokens: MutableList<Token>
     private var useCardTokenization: Boolean = false
     private var result: TransferResult? = null
+
+    fun cacheToken(token: Token) = with(tokens) {
+        if (none { it.value == token.value }) {
+            add(token)
+        }
+    }
 
     //OS
     override fun onCreateView(
@@ -53,7 +62,13 @@ class PresentationFragment : Fragment() {
         inputTexts = getTextInputs(savedInstanceState)
         inputPaymentMethods = getPaymentMethods(savedInstanceState)
         result = savedInstanceState?.getSerializableCompat(TRANSFER_RESULT_KEY)
-        useCardTokenization = savedInstanceState?.getBoolean(CARD_TOKENIZATION_KEY) ?: useCardTokenization
+        useCardTokenization =
+            savedInstanceState?.getBoolean(CARD_TOKENIZATION_KEY) ?: useCardTokenization
+        tokens = savedInstanceState
+            ?.getSerializableArrayListCompat<Token>(TOKENS_CACHE_KEY)
+            .orEmpty()
+            .toMutableList()
+
         return NestedScrollView(requireContext()).apply {
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -77,12 +92,13 @@ class PresentationFragment : Fragment() {
         inputPaymentMethods
             .mapNotNull { (paymentMethod, isSelected) -> if (isSelected) paymentMethod.name else null }
             .let { outState.putStringArray(TRANSFER_PAYMENT_METHODS_KEY, it.toTypedArray()) }
+        outState.putSerializable(TOKENS_CACHE_KEY, arrayListOf<Token>().apply { addAll(tokens) })
         outState.putBoolean(CARD_TOKENIZATION_KEY, useCardTokenization)
     }
 
     override fun onResume() {
         super.onResume()
-        result?.let(::setupResultViews) ?: setupInputViews(inputTexts, inputPaymentMethods)
+        result?.let(::setupResultViews) ?: setupInputViews(inputTexts, inputPaymentMethods, tokens)
     }
 
     fun submitResult(result: TransferResult) {
@@ -93,14 +109,15 @@ class PresentationFragment : Fragment() {
     //Views helpers
     private fun setupInputViews(
         inputTexts: MutableMap<String, String>,
-        inputPaymentMethods: MutableMap<PaymentMethod, Boolean>
+        inputPaymentMethods: MutableMap<PaymentMethod, Boolean>,
+        tokens: List<Token>
     ) = with(linearLayout) {
         removeAllViews()
         addView(createHeaderView("Required params"))
         defaultRequiredParams.keys.sorted().forEach { hint ->
             inputTexts[hint]?.let { input ->
                 addView(
-                    createTextView(
+                    createEditView(
                         text = input,
                         hint = hint,
                         onTextChanged = { inputTexts[hint] = it },
@@ -125,15 +142,16 @@ class PresentationFragment : Fragment() {
             )
         }
         addView(createSpacingView())
-        addView(createToggle("Card tokenization", isChecked = useCardTokenization) { isChecked ->
+        addView(createToggle("Tokenize payment card", isChecked = useCardTokenization) { isChecked ->
             useCardTokenization = isChecked
         })
+        addView(createTokensSummaryView(tokens))
         addView(createSpacingView())
         addView(createHeaderView("Optional params"))
         defaultOptionalParams.keys.sorted().forEach { hint ->
             inputTexts[hint]?.let { input ->
                 addView(
-                    createTextView(
+                    createEditView(
                         text = input,
                         hint = hint,
                         onTextChanged = { newInput -> inputTexts[hint] = newInput },
@@ -145,32 +163,58 @@ class PresentationFragment : Fragment() {
             (requireActivity() as? Callbacks)?.startPayment(
                 stringParams = inputTexts,
                 paymentMethodsParams = inputPaymentMethods.mapNotNull { if (it.value) it.key else null },
-                useCardTokenization = useCardTokenization
+                useCardTokenization = useCardTokenization,
+                tokens = tokens,
             )
         })
+    }
+
+    private fun createTokensSummaryView(tokens: List<Token>): View {
+        val tokensSummary = buildString {
+            if (tokens.isEmpty()) {
+                append("No cached tokens")
+            } else {
+                append("Will use ${tokens.size} tokens:\n")
+            }
+            tokens.forEach { token ->
+                append(token.type)
+                append(":")
+                append(token.value)
+                append("\n")
+            }
+        }
+        return createTextView(tokensSummary)
     }
 
     private fun setupResultViews(result: TransferResult) = with(linearLayout) {
         removeAllViews()
         addView(
-            createTextView(
+            createEditView(
                 text = result.isSuccess.toString(),
                 hint = "Payment result",
             )
         )
         result.transactionId?.let { transactionId ->
-            addView(createTextView(text = transactionId, hint = "transactionId"))
+            addView(createEditView(text = transactionId, hint = "transactionId"))
         }
         result.sdkError?.let { sdkError ->
             var text = sdkError::class.java.simpleName
-            if(sdkError is SibsSdkError.CheckoutError) {
+            if (sdkError is SibsSdkError.CheckoutError) {
                 text += ":${sdkError.httpErrorCode}"
             }
-            addView(createTextView(text = text, hint = "sdk error"))
+            addView(createEditView(text = text, hint = "sdk error"))
+        }
+        result.token?.let { token ->
+            addView(createHeaderView("Response token"))
+            addView(createEditView(text = token.type, hint = "type"))
+            addView(createEditView(text = token.value, hint = "value"))
+            addView(createEditView(text = token.name.toString(), hint = "name"))
+            addView(createEditView(text = token.maskedPan.toString(), hint = "maskedPan"))
+            addView(createEditView(text = token.expireDate.toString(), hint = "expireDate"))
         }
         addView(createButtonView(getString(android.R.string.ok)) {
             this@PresentationFragment.result = null
-            setupInputViews(inputTexts, inputPaymentMethods)
+            setupInputViews(inputTexts, inputPaymentMethods, tokens)
         })
     }
 
@@ -186,7 +230,12 @@ class PresentationFragment : Fragment() {
         }
     }
 
-    private fun createTextView(
+    private fun createTextView(text: String): View = TextView(requireContext()).apply {
+        this.text = text
+        layoutParams = createItemLayoutParams()
+    }
+
+    private fun createEditView(
         text: String,
         hint: String,
         onTextChanged: ((String) -> Unit)? = null
@@ -242,7 +291,7 @@ class PresentationFragment : Fragment() {
             )
             this.text = text
             setChecked(isChecked)
-            setOnCheckedChangeListener { _, isChecked -> onCheckedChange(isChecked)}
+            setOnCheckedChangeListener { _, isChecked -> onCheckedChange(isChecked) }
         }
     }
 
@@ -281,5 +330,6 @@ class PresentationFragment : Fragment() {
         private const val CARD_TOKENIZATION_KEY = "card_tokenization"
         const val TRANSFER_RESULT_KEY = "result"
         const val TRANSFER_PAYMENT_METHODS_KEY = "payment_methods"
+        const val TOKENS_CACHE_KEY = "tokens_cache"
     }
 }
