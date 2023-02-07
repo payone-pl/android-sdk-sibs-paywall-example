@@ -11,9 +11,22 @@ import kotlinx.coroutines.launch
 
 class SdkConsumerActivity : AppCompatActivity(), PresentationFragment.Callbacks {
 
+    private lateinit var tokensCache: MutableSet<Token>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_client)
+        tokensCache = savedInstanceState
+            ?.getSerializableArrayListCompat<Token>(TOKENS_CACHE_KEY)
+            .orEmpty()
+            .toMutableSet()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putSerializable(
+            TOKENS_CACHE_KEY,
+            arrayListOf<Token>().apply { addAll(tokensCache) })
     }
 
     override fun startPayment(
@@ -31,7 +44,13 @@ class SdkConsumerActivity : AppCompatActivity(), PresentationFragment.Callbacks 
         ) ?: return
 
         /** 2. Start SIBS SDK **/
-        sdkActivityLauncher.launch(TransactionActivity.getIntent(this, transactionParams))
+        sdkActivityLauncher.launch(
+            TransactionActivity.getIntent(
+                this,
+                transactionParams,
+                SibsSDKConfig.fromMetadataOrNull(this)!!
+            )
+        )
     }
 
     /** 3. Consume the result **/
@@ -70,7 +89,7 @@ class SdkConsumerActivity : AppCompatActivity(), PresentationFragment.Callbacks 
      * This check will perform the call to check current status of the transaction
      **/
     private fun performOptionalTransactionStatusCheck(transactionId: String) {
-        val statusCheckService = SibsPaymentStatusService(this)
+        val statusCheckService = SibsPaymentStatusService(SibsSDKConfig.fromMetadataOrNull(this)!!)
         lifecycleScope.launch {
             when (val response = statusCheckService.check(transactionId)) {
                 is PaymentStatusCheckResponse.Checked -> showToast("Current status: ${response.paymentStatus.paymentStatus}")
@@ -119,13 +138,16 @@ class SdkConsumerActivity : AppCompatActivity(), PresentationFragment.Callbacks 
             .amount(amount)
             .currency(currency)
             .paymentMethods(paymentMethods)
+            //optional card tokenization
             .apply {
-                //optional card tokenization
-                val tokenizationParams = TokenizationParams.Builder()
-                    .tokenizeCard(useCardTokenization)
-                    .tokens(tokens)
-                    .build()
-                tokenization(tokenizationParams)
+                if (useCardTokenization) {
+                    val cachedCardTokens = tokensCache.takeIf { it.isNotEmpty() }?.toList()
+                    val tokenizationParams = TokenizationParams.Builder()
+                        .tokenizeCard(true)
+                        .tokens(cachedCardTokens)
+                        .build()
+                    tokenization(tokenizationParams)
+                }
             }
             //optional parameters
             .merchantTransactionDescription(merchantTransactionDescription)
@@ -147,4 +169,7 @@ class SdkConsumerActivity : AppCompatActivity(), PresentationFragment.Callbacks 
         .makeText(this, msg, Toast.LENGTH_SHORT)
         .show()
 
+    companion object {
+        private const val TOKENS_CACHE_KEY = "tokens_cache"
+    }
 }
